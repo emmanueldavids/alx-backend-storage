@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-""" 8. List all documents in Python
-"""
-
-import pymongo
+'''Module with a function that inserts a new document in a collection.
+'''
 
 
-def list_all(mongo_collection):
-    """ list_all.
-    """
-    docs = mongo_collection.find()
-    return [x for x in docs]
+def insert_school(mongo_collection, **kwargs):
+    '''Function that inserts a new document in a collection.
+    '''
+    result = mongo_collection.insert_one(kwargs)
+    return result.inserted_id
