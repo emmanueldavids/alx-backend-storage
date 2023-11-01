@@ -1,57 +1,36 @@
 #!/usr/bin/env python3
-
-""" Implementing an expiring web cache and tracker """
-
-
 import requests
 import time
-import redis
+from functools import wraps
+from typing import Dict
+
+cache: Dict[str, str] = {}
 
 
-class WebCache:
-    def __init__(self, host='localhost', port=6379):
-        self._redis = redis.Redis(host=host, port=port, decode_responses=True)
-
-    def get_page(self, url: str) -> str:
-        """ Check if the URL is already cached.Implementing
-            an expiring web cache and tracker.
-        """
-
-        cached_content = self._redis.get(url)
-        if cached_content:
-            print(f"Cache hit for URL: {url}")
-            return cached_content
-
-        # Fetch the page content
+def get_page(url: str) -> str:
+    if url in cache:
+        print(f"Retrieving from cache: {url}")
+        return cache[url]
+    else:
+        print(f"Retrieving from web: {url}")
         response = requests.get(url)
-        page_content = response.text
-
-        # Cache the content with a 10-second expiration
-        self._redis.setex(url, 10, page_content)
-
-        # Track URL access count
-        self._redis.incr(f"count:{url}")
-
-        return page_content
-
-    def get_access_count(self, url: str) -> int:
-        # Get the access count for the URL
-        count = self._redis.get(f"count:{url}")
-        return int(count) if count else 0
+        result = response.text
+        cache[url] = result
+        return result
 
 
-# Usage example
-web_cache = WebCache()
-
-# Access a slow URL
-url = "http://slowwly.robertomurray.co.uk/delay/10000/url/https://www.example.com"
-content = web_cache.get_page(url)
-print(content)
-
-# Access the same URL again (should be cached)
-content = web_cache.get_page(url)
-print(content)
-
-# Access count for the URL
-access_count = web_cache.get_access_count(url)
-print(f"Access count for {url}: {access_count}")
+def cache_with_expiration(expiration: int):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            url = args[0]
+            key = f"count:{url}"
+            if key in cache:
+                count, timestamp = cache[key]
+                if time.time() - timestamp > expiration:
+                    result = func(*args, **kwargs)
+                    cache[key] = (count+1, time.time())
+                    return result
+                else:
+                    cache[key] = (count+1, timestamp)
+                    return
