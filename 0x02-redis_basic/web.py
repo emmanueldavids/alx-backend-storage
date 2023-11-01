@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+
+"""
+Redis module, Writing strings to Redis
+Reading from Redis and recovering original type
+Incrementing values, storing lists, Retrieving lists
+"""
+
 import requests
 import time
 from functools import wraps
@@ -20,6 +27,10 @@ def get_page(url: str) -> str:
 
 
 def cache_with_expiration(expiration: int):
+    """
+    Store instance of Redis client as private variable _redis
+    Flush the instance using flushdb
+    """
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
