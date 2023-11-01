@@ -29,7 +29,8 @@ class Cache:
         self._redis.set(key, data)
         return key
 
-    def get(self, key: str, fn: Callable = None) -> Union[str, float, int, bytes]:
+    def get(self, key: str, fn: Callable = None) ->
+    Union[str, float, int, bytes]:
         """ In this method we will create a get method that take a key string
             argument and an optional Callable argument named fn. This callable
             will be used to convert the data back to the desired format.
@@ -55,7 +56,8 @@ class Cache:
         return self.get(key, fn=int)
 
     def count_calls(method: Callable) -> Callable:
-        """ Above Cache define a count_calls decorator that takes a single method
+        """ Above Cache define a count_calls decorator
+            that takes a single method
             Callable argument and returns a Callable.
         """
 
@@ -65,43 +67,44 @@ class Cache:
             self._redis.incr(key)
             return method(self, *args, **kwargs)
         return wrapper
-    
+
     def call_history(method: Callable) -> Callable:
-        """ this task, we will define a call_history decorator to store the history of
+        """ this task, we will define a call_history
+            decorator to store the history of
             inputs and outputs for a particular function.
         """
-    
+
         @wraps(method)
         def wrapper(self, *args, **kwargs):
             input_key = f"{method.__qualname__}:inputs"
             output_key = f"{method.__qualname__}:outputs"
-            
+
             self._redis.rpush(input_key, str(args))
-            
+
             output = method(self, *args, **kwargs)
             self._redis.rpush(output_key, str(output))
-            
+
             return output
         return wrapper
-    
+
     def replay(fn):
         """
         Display the history of calls of a particular function.
         """
         # Get the qualified name of the function
         fn_name = fn.__qualname__
-        
+
         # Get the keys for input and output history
         input_key = f"{fn_name}:inputs"
         output_key = f"{fn_name}:outputs"
-        
+
         # Retrieve the list of inputs and outputs from Redis
         inputs = cache._redis.lrange(input_key, 0, -1)
         outputs = cache._redis.lrange(output_key, 0, -1)
-        
+
         # Print the history of calls
         print(f"{fn_name} was called {len(inputs)} times:")
         for i, (input_data, output_data) in enumerate(zip(inputs, outputs)):
-            input_args = eval(input_data)  # Convert the string back to args tuple
+            input_args = eval(input_data)
             output_key = output_data.decode("utf-8")  # Decode the byte string
             print(f"{fn_name}(*{input_args}) -> {output_key}")
