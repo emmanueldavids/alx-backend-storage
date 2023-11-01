@@ -102,6 +102,8 @@ class Cache():
         return value if not fn else fn(value)
 
     def get_int(self, key):
+        """ This method returns a decoded key integer format. """
+
         return self.get(key, int)
 
     def get_str(self, key):
