@@ -1,5 +1,3 @@
---  An SQL script that creates an index idx_name_first on the table names 
--- And the first letter of name.
+-- This SQL script creates a index named 'idx_name_first' on the 'name' column of the 'names' table. The index will be created on the first character of the name column.
 
--- Create index on the first letter of the name column
-CREATE INDEX idx_name_first ON names (LEFT(name, 1));
+CREATE INDEX idx_name_first ON names(name(1));
